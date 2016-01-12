@@ -1,3 +1,4 @@
+use std::str;
 use prime;
 
 pub struct TrieSlot {
@@ -7,15 +8,15 @@ pub struct TrieSlot {
     value: TrieNode,
 }
 
-pub struct TrieNode {
-    buckets: Vec<u32>,
-    slots: Vec<TrieSlot>,
-}
-
 impl TrieSlot{
     pub fn new(key:u8, next:u32)-> TrieSlot{
        TrieSlot{key:key, next:next, value:TrieNode::new(), end:false}
     }
+}
+
+pub struct TrieNode {
+    buckets: Vec<u32>,
+    slots: Vec<TrieSlot>,
 }
 
 impl TrieNode{
@@ -54,7 +55,7 @@ impl TrieNode{
                 i = self.slots[i].next as usize;
             }
         }
-        return 0
+        0
     }
 
     fn add_char(&mut self, key:u8){
@@ -73,7 +74,7 @@ impl TrieNode{
         self.buckets[index] = 1 + size as u32;
     }
 
-    pub fn add_key(&mut self, keys:&[u8], trans: &[u8;CHARCOUNT]){
+    pub fn add_keyword(&mut self, keys:&[u8], trans: &[u8;CHARCOUNT]){
         let key_len = keys.len();
         if key_len == 0{
             return
@@ -95,10 +96,10 @@ impl TrieNode{
         if key_len == 1{
             self.slots[i].end = true;
         }
-        self.slots[i].value.add_key(&keys[1..key_len], trans)
+        self.slots[i].value.add_keyword(&keys[1..key_len], trans)
     }
 
-    pub fn exists_key(&self, keys:&[u8], trans: &[u8;CHARCOUNT], depth: &mut i32) ->bool{
+    pub fn exists_key(&self, keys:&[u8], trans: &[u8;CHARCOUNT], depth: &mut usize) ->bool{
         let key_len = keys.len();
         if key_len == 0{
             return false
@@ -132,17 +133,9 @@ impl TrieNode{
 }
 
 const CHARCOUNT : usize = 256;
-
 pub struct TrieFilter  {
 	transition: [u8;CHARCOUNT],
 	root_node:  TrieNode,
-}
-
-fn get_non_zero(a:u8, b:u8) ->usize {
-	if a != 0 {
-		return a as usize
-	}
-	return b as usize
 }
 
 impl TrieFilter{
@@ -190,94 +183,93 @@ impl TrieFilter{
     }
 
     //添加关键字
-    pub fn add_key(&mut self, key : &str){
-        self.root_node.add_key(key.as_bytes(), &self.transition)
+    pub fn add_keyword(&mut self, key : &str){
+        self.root_node.add_keyword(key.as_bytes(), &self.transition)
     }
 
     // 查找关键字的位置
-    fn find_badword_index(&self, text:&[u8]) ->i32 {
-        let mut depth = 0i32;
+    fn find_keyword_index(&self, text:&[u8]) ->usize {
+        let mut depth = 0usize;
         if self.root_node.exists_key(text, &self.transition, &mut depth){
             depth
         }else{
-            -1
+            0
         }
     }
 
-    // 存在过滤字
-    pub fn has_badword(&self, text :&str) ->bool {
+    // 是否存在关键字
+    pub fn exists_keyword(&self, text :&str) ->bool {
         let bin = text.as_bytes();
         let len = bin.len();
     	for i in 0..len {
-    		let index = self.find_badword_index(&bin[i..len]);
+    		let index = self.find_keyword_index(&bin[i..len]);
     		if index > 0 {
     			return true
     		}
     	}
-    	return false
+    	false
     }
 
-    //查找第1个脏字
-    pub fn find_first(&self, text :&str) -> Option<String> {
+    //查找第1个关键字
+    pub fn find_first<'a>(&self, text :&'a str) -> Option<&'a str> {
         let bin = text.as_bytes();
         let len = bin.len();
     	for i in 0..len  {
-    		let index = self.find_badword_index(&bin[i..len]);
+    		let index = self.find_keyword_index(&bin[i..len]);
     		if index > 0 {
-                let end_index = i+index as usize;
-    			return Option::Some(String::from_utf8(bin[i..end_index].to_vec()).unwrap())
+                return Some(str::from_utf8(&bin[i..(i+index)]).unwrap())
     		}
     	}
-    	return Option::None
+    	Option::None
     }
 
-    pub fn find_all(&self, text :&str) -> Vec<String> {
-	    let mut all_badword : Vec<String> = Vec::new();
+    //查找所有关键字
+    pub fn find_all<'a>(&self, text :&'a str) -> Vec<&'a str> {
+	    let mut all_keys: Vec<&'a str> = Vec::new();
         let bin = text.as_bytes();
         let len = bin.len();
         let mut i = 0;
        	while i < len  {
-       		let index = self.find_badword_index(&bin[i..len]);
+       		let index = self.find_keyword_index(&bin[i..len]);
        		if index > 0 {
-                let end_index = i+index as usize;
-       			all_badword.push(String::from_utf8(bin[i..end_index].to_vec()).unwrap());
+       			all_keys.push(str::from_utf8(&bin[i..(i+index)]).unwrap());
                 i += index as usize;
        		}else{
                 i+=1;
             }
        	}
-	    all_badword
+	    all_keys
     }
 
     pub fn replace(&self, text :&str, mask:u8) -> String {
         let bin = text.as_bytes();
         let len = bin.len();
-    	let mut outbuffer: Vec<u8> = Vec::new();
+    	let mut out_buffer: Vec<u8> = Vec::new();
     	let mut find_count = 0;
         let mut i = 0;
     	while i < len {
-    	    let	index = self.find_badword_index(&bin[i..len]);
+    	    let	index = self.find_keyword_index(&bin[i..len]);
     		if index > 0 {
     			if find_count == 0 {
-                    //outbuffer.push_all(&bin[0..i]);
+                    //unsafe {out_buffer.push_all(&bin[0..i])};
                     for t in 0..i{
-        			   outbuffer.push(bin[t]);
+        			   out_buffer.push(bin[t]);
                     }
     			}
-    			find_count+=1;
-    			outbuffer.push(mask);
+    			find_count += 1;
+    			out_buffer.push(mask);
     			i += index as usize;
     		} else {
     			if find_count > 0 {
-    			    outbuffer.push(bin[i]);
+    			    out_buffer.push(bin[i]);
     			}
-                i +=1
+                i += 1;
     		}
     	}
     	if find_count == 0 {
     		text.to_string()
     	}else{
-            String::from_utf8(outbuffer).unwrap()
+            String::from_utf8(out_buffer).unwrap()
         }
     }
 

@@ -24,10 +24,22 @@ const PRIMES:&'static [u32] = &[3, 7, 11, 0x11, 0x17, 0x1d, 0x25, 0x2f, 0x3b, 0x
  0x1ea867, 0x24ca19, 0x2c25c1, 0x34fa1b, 0x3f928f, 0x4c4987, 0x5b8b6f, 0x6dda89];
 
 pub fn get_prime(min:u32)->u32{
+    //在已知数据中查找
     for num2 in PRIMES.iter(){
          if *num2 >= min{
             return *num2
          }
+    }
+    //通过计算获得
+    let mut next = min;
+    if (next & 1) == 0{
+        next+=1;
+    }
+    while next < 0x7fffffff{
+        if is_prime(next){
+            return next
+        }
+        next+=2
     }
     0
 }
@@ -38,7 +50,7 @@ pub fn get_hash_code(text: &[u8])->u32{
     for i in 0..count{
         h = (h << 5) - h + text[i] as u32;
     }
-    return h & 0x7fffffff
+    h & 0x7fffffff
 }
 
 pub fn text_equals(s1: &[u8], s2: &[u8]) ->bool{

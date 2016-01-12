@@ -35,9 +35,9 @@ fn test_text_equals() {
 fn test_trie_filter_find_first() {
      let mut t = trie::TrieFilter::new(true);
      t.add_ignore_chars("@#");
-     t.add_key("天朝");
-     t.add_key("fuck");
-     t.add_key("小日本");
+     t.add_keyword("天朝");
+     t.add_keyword("fuck");
+     t.add_keyword("小日本");
      {
          let op_bad_word = t.find_first("BBbddFuCkadsafds");
          match op_bad_word{
@@ -62,14 +62,13 @@ fn test_trie_filter_find_first() {
 fn test_trie_filter_find_all() {
      let mut t = trie::TrieFilter::new(true);
      t.add_ignore_chars("@#");
-     t.add_key("天朝");
-     t.add_key("fuck");
-     t.add_key("小日本");
+     t.add_keyword("天朝");
+     t.add_keyword("fuck");
+     t.add_keyword("小日本");
      {
         let all_word = t.find_all("BBbdItfuckerates  clones and then appendsdFuCkadsa小日本fds");
         assert_eq!(all_word, ["fuck","FuCk","小日本"]);
     }
-
     {
        let all_word = t.find_all("BBbdItfuckerates clonesand then appendsdFuCkadsa小@日#本fds");
        assert_eq!(all_word, ["fuck","FuCk","小@日#本"]);
@@ -80,14 +79,13 @@ fn test_trie_filter_find_all() {
 fn test_trie_filter_replace() {
      let mut t = trie::TrieFilter::new(true);
      t.add_ignore_chars("@#");
-     t.add_key("天朝");
-     t.add_key("fuck");
-     t.add_key("小日本");
+     t.add_keyword("天朝");
+     t.add_keyword("fuck");
+     t.add_keyword("小日本");
      {
         let word = t.replace("BBbdItfuckerates  clones and then appendsdFuCkadsa小日本fds", "*".as_bytes()[0]);
         assert_eq!(word, "BBbdIt*erates  clones and then appendsd*adsa*fds");
     }
-
     {
        let word = t.replace("BBbdItfuckerates clonesand then appendsdFuCkadsa小@日#本fds", "*".as_bytes()[0]);
        assert_eq!(word, "BBbdIt*erates clonesand then appendsd*adsa*fds");
