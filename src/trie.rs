@@ -95,11 +95,12 @@ impl TrieNode{
         i-=1;
         if key_len == 1{
             self.slots[i].end = true;
+            return
         }
         self.slots[i].value.add_keyword(&keys[1..key_len], trans)
     }
 
-    pub fn exists_key(&self, keys:&[u8], trans: &[u8;CHARCOUNT], depth: &mut usize) ->bool{
+    pub fn exist_keyword(&self, keys:&[u8], trans: &[u8;CHARCOUNT], depth: &mut usize) ->bool{
         let key_len = keys.len();
         if key_len == 0{
             return false
@@ -118,7 +119,7 @@ impl TrieNode{
         if i == 0{
             if ignore{
         	    //被忽略的字符.跳过后继续找
-                self.exists_key(&keys[1..key_len], trans, depth)
+                self.exist_keyword(&keys[1..key_len], trans, depth)
             }else{
                 false
             }
@@ -126,7 +127,7 @@ impl TrieNode{
             if self.slots[i-1].end{
                 true
             }else{
-                self.slots[i-1].value.exists_key(&keys[1..key_len], trans, depth)
+                self.slots[i-1].value.exist_keyword(&keys[1..key_len], trans, depth)
             }
         }
     }
@@ -190,7 +191,7 @@ impl TrieFilter{
     // 查找关键字的位置
     fn find_keyword_index(&self, text:&[u8]) ->usize {
         let mut depth = 0usize;
-        if self.root_node.exists_key(text, &self.transition, &mut depth){
+        if self.root_node.exist_keyword(text, &self.transition, &mut depth){
             depth
         }else{
             0
@@ -198,7 +199,7 @@ impl TrieFilter{
     }
 
     // 是否存在关键字
-    pub fn exists_keyword(&self, text :&str) ->bool {
+    pub fn exist_keyword(&self, text :&str) ->bool {
         let bin = text.as_bytes();
         let len = bin.len();
     	for i in 0..len {
