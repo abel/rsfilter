@@ -25,21 +25,18 @@ const PRIMES:&'static [u32] = &[3, 7, 11, 0x11, 0x17, 0x1d, 0x25, 0x2f, 0x3b, 0x
 
 pub fn get_prime(min:u32)->u32{
     //在已知数据中查找
-    for num2 in PRIMES.iter(){
-         if *num2 >= min{
-            return *num2
+    for p in PRIMES.iter(){
+         if *p >= min{
+            return *p
          }
     }
     //通过计算获得
-    let mut next = min;
-    if (next & 1) == 0{
-        next+=1;
-    }
+    let mut next = min | 1;
     while next < 0x7fffffff{
         if is_prime(next){
             return next
         }
-        next+=2
+        next+=2;
     }
     0
 }
