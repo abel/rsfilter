@@ -25,17 +25,18 @@ impl TrieNode{
     }
 
     fn increase_capacity(&mut self, capacity:usize) -> usize{
-        let size = self.slots.len();
         let prime = prime::get_prime(capacity as u32) as usize;
-        self.buckets.resize(prime, 0);
-        //重新设置m_buckets和next
-        for i in 0..size{
-            self.buckets[i] = 0;
+        //重新设置buckets和next
+        for i in &mut self.buckets{
+            *i = 0;
         }
-        for i in 0..size {
-            let index = (self.slots[i].key as usize ) % prime;
-            self.slots[i].next = self.buckets[index];
-            self.buckets[index] = (i+1) as u32;
+        self.buckets.resize(prime, 0);
+        let mut i = 0u32;
+        for slot in &mut self.slots {
+            let index = (slot.key as usize ) % prime;
+            slot.next = self.buckets[index];
+            i+=1;
+            self.buckets[index] = i;
         }
         prime
     }
@@ -252,7 +253,7 @@ impl TrieFilter{
     	    let	index = self.find_keyword_index(&bin[i..len]);
     		if index > 0 {
     			if find_count == 0 {
-                    //unsafe {out_buffer.push_all(&bin[0..i])};
+                    //out_buffer.push_all(&bin[0..i]);
                     for t in 0..i{
         			   out_buffer.push(bin[t]);
                     }
