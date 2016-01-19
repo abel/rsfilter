@@ -119,7 +119,7 @@ impl TrieNode{
         let i = self.get_node_index(key);
         if i == 0{
             if ignore{
-        	    //被忽略的字符.跳过后继续找
+                //被忽略的字符.跳过后继续找
                 self.exist_keyword(&keys[1..key_len], trans, depth)
             }else{
                 false
@@ -136,8 +136,8 @@ impl TrieNode{
 
 const CHARCOUNT : usize = 256;
 pub struct TrieFilter  {
-	transition: [u8;CHARCOUNT],
-	root_node:  TrieNode,
+    transition: [u8;CHARCOUNT],
+    root_node:  TrieNode,
 }
 
 impl TrieFilter{
@@ -160,28 +160,28 @@ impl TrieFilter{
         //简繁转换.暂未实现
         //if (ignore_simpTrad)
         //{
-        //	AddReplaceChars(zh_TW, zh_CN);
+        //    AddReplaceChars(zh_TW, zh_CN);
         //}
     }
 
     //增加忽略字符
     pub fn add_ignore_chars(&mut self, pass_chars: &str) {
-    	for src in pass_chars.as_bytes(){
-    		self.transition[*src as usize] = 0;
-    	}
+        for src in pass_chars.as_bytes(){
+            self.transition[*src as usize] = 0;
+        }
     }
 
     //增加替换字符
     pub fn add_replace_chars(&mut self, src_chars: &str, replace: &str) {
         let src_bin = src_chars.as_bytes();
         let replace_bin = replace.as_bytes();
-    	let mut count = src_bin.len();
-    	if count > replace_bin.len() {
-    		count = replace_bin.len();
-    	}
-    	for i in 0..count {
-    		self.transition[src_bin[i] as usize] = replace_bin[i];
-    	}
+        let mut count = src_bin.len();
+        if count > replace_bin.len() {
+            count = replace_bin.len();
+        }
+        for i in 0..count {
+            self.transition[src_bin[i] as usize] = replace_bin[i];
+        }
     }
 
     //添加关键字
@@ -203,74 +203,75 @@ impl TrieFilter{
     pub fn exist_keyword(&self, text :&str) ->bool {
         let bin = text.as_bytes();
         let len = bin.len();
-    	for i in 0..len {
-    		let index = self.find_keyword_index(&bin[i..len]);
-    		if index > 0 {
-    			return true
-    		}
-    	}
-    	false
+        for i in 0..len {
+            let index = self.find_keyword_index(&bin[i..len]);
+            if index > 0 {
+                return true
+            }
+        }
+        false
     }
 
     //查找第1个关键字
     pub fn find_first<'a>(&self, text :&'a str) -> Option<&'a str> {
         let bin = text.as_bytes();
         let len = bin.len();
-    	for i in 0..len  {
-    		let index = self.find_keyword_index(&bin[i..len]);
-    		if index > 0 {
+        for i in 0..len  {
+            let index = self.find_keyword_index(&bin[i..len]);
+            if index > 0 {
                 return Some(str::from_utf8(&bin[i..(i+index)]).unwrap())
-    		}
-    	}
-    	Option::None
+            }
+        }
+        Option::None
     }
+
 
     //查找所有关键字
     pub fn find_all<'a>(&self, text :&'a str) -> Vec<&'a str> {
-	    let mut all_keys: Vec<&'a str> = Vec::new();
+        let mut all_keys: Vec<&'a str> = Vec::new();
         let bin = text.as_bytes();
         let len = bin.len();
         let mut i = 0;
-       	while i < len  {
-       		let index = self.find_keyword_index(&bin[i..len]);
-       		if index > 0 {
-       			all_keys.push(str::from_utf8(&bin[i..(i+index)]).unwrap());
+        while i < len  {
+            let index = self.find_keyword_index(&bin[i..len]);
+            if index > 0 {
+                all_keys.push(str::from_utf8(&bin[i..(i+index)]).unwrap());
                 i += index as usize;
-       		}else{
+            }else{
                 i+=1;
             }
-       	}
-	    all_keys
+        }
+        all_keys
     }
 
     pub fn replace(&self, text :&str, mask:u8) -> String {
         let bin = text.as_bytes();
         let len = bin.len();
-    	let mut out_buffer: Vec<u8> = Vec::new();
-    	let mut find_count = 0;
+        let mut out_buffer: Vec<u8> = Vec::new();
+        let mut find_count = 0;
         let mut i = 0;
-    	while i < len {
-    	    let	index = self.find_keyword_index(&bin[i..len]);
-    		if index > 0 {
-    			if find_count == 0 {
+        while i < len {
+            let    index = self.find_keyword_index(&bin[i..len]);
+            if index > 0 {
+                if find_count == 0 {
                     //out_buffer.push_all(&bin[0..i]);
                     for t in 0..i{
-        			   out_buffer.push(bin[t]);
+                       out_buffer.push(bin[t]);
                     }
-    			}
-    			find_count += 1;
-    			out_buffer.push(mask);
-    			i += index as usize;
-    		} else {
-    			if find_count > 0 {
-    			    out_buffer.push(bin[i]);
-    			}
+                }
+                find_count += 1;
+                out_buffer.push(mask);
+                i += index as usize;
+            } else {
+                if find_count > 0 {
+                    out_buffer.push(bin[i]);
+                }
                 i += 1;
-    		}
-    	}
-    	if find_count == 0 {
-    		text.to_string()
-    	}else{
+            }
+        }
+        if find_count == 0 {
+            text.to_string()
+        }else{
             String::from_utf8(out_buffer).unwrap()
         }
     }
