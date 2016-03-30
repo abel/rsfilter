@@ -3,6 +3,7 @@
 mod tests{
     use prime;
     use trie;
+    use filter;
 
     #[test]
     #[ignore]
@@ -88,13 +89,34 @@ mod tests{
          t.add_keyword("fuck");
          t.add_keyword("小日本");
          {
-            let word = t.replace("BBbdItfuckerates  clones and then appendsdFuCkadsa小日本fds", "*".as_bytes()[0]);
+            let word = t.replace("BBbdItfuckerates  clones and then appendsdFuCkadsa小日本fds", '*' as u8);
             assert_eq!(word, "BBbdIt*erates  clones and then appendsd*adsa*fds");
         }
         {
-           let word = t.replace("BBbdItfuckerates clonesand then appendsdFuCkadsa小@日#本fds", "*".as_bytes()[0]);
+           let word = t.replace("BBbdItfuckerates clonesand then appendsdFuCkadsa小@日#本fds", '*' as u8);
            assert_eq!(word, "BBbdIt*erates clonesand then appendsd*adsa*fds");
        }
     }
+
+   #[test]
+   fn test_load_maskword_file() {
+       filter::load_maskword_file("F:\\source\\rust\\rsfilter\\tests\\maskWord.txt");
+       unsafe{
+           {
+               let all_word = (*filter::defaultWordFilter).find_all("BBbdItfuckerates  clones and then appendsdFuCkadsa小日本fds");
+               assert_eq!(all_word, ["fuck","FuCk","小日本"]);
+            }
+            {
+                let all_word =  (*filter::defaultWordFilter).find_all("BBbdItfuckerates clonesand then appendsdFuCkadsa小@日#本fds");
+                assert_eq!(all_word, ["fuck","FuCk","小@日#本"]);
+            }
+        }
+   }
+
+   #[test]
+   fn test_load_maskname_file() {
+       filter::load_maskname_file("F:\\source\\rust\\rsfilter\\tests\\maskSpecial.txt");
+       //unimplemented!()
+   }
 
 }

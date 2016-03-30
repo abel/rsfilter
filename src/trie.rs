@@ -1,4 +1,9 @@
 use std::str;
+use std::io;
+use std::io::prelude::*;
+use std::io::BufReader;
+use std::fs::File;
+
 use prime;
 
 pub struct TrieSlot {
@@ -185,8 +190,18 @@ impl TrieFilter{
     }
 
     //添加关键字
-    pub fn add_keyword(&mut self, key : &str){
-        self.root_node.add_keyword(key.as_bytes(), &self.transition)
+    pub fn add_keyword(&mut self, text : &str){
+        self.root_node.add_keyword(text.as_bytes(), &self.transition)
+    }
+
+    pub fn load_keyword_from_file(&mut self, path: &str) -> io::Result<()>{
+        let f = try!(File::open(path));
+        let reader = BufReader::new(f);
+        for line in reader.lines() {
+            let line = try!(line);
+            self.add_keyword(&line);
+        }
+        Ok(())
     }
 
     // 查找关键字的位置
